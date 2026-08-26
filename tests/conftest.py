@@ -1,8 +1,10 @@
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from backend.ingestion import ingestion
 from backend.models import (
     CompanyType,
     CountryCode,
@@ -13,6 +15,22 @@ from backend.models import (
     Location,
     Salary,
 )
+
+
+FIXTURE_FEED_DIR = Path(__file__).resolve().parent / "fixtures"
+FIXTURE_FEED = FIXTURE_FEED_DIR / "feed.json"
+
+
+@pytest.fixture
+def feed_dir(monkeypatch):
+    """Ingest from the tests' own feed instead of backend/data/mock.
+
+    The shipped feeds are sample data and change; every count asserted in these
+    tests is a fact about tests/fixtures/feed.json, which does not.
+    """
+    monkeypatch.setattr(ingestion, "FEED_DIR", FIXTURE_FEED_DIR)
+    monkeypatch.setattr(ingestion, "DEFAULT_FEED", FIXTURE_FEED)
+    return FIXTURE_FEED_DIR
 
 
 def usd(annual=None, hourly=None, currency=Currency.USD) -> Salary:

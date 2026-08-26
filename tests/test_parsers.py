@@ -70,6 +70,26 @@ class TestParseSalary:
     def test_unusable_values_give_no_salary(self, value):
         assert parse_salary(value) is None
 
+    @pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan"), True])
+    def test_non_finite_and_bool_give_no_salary(self, value):
+        # Infinity serializes to invalid JSON, NaN raises on comparison, and
+        # Decimal("True") raises outright - none of them may reach a Salary.
+        assert parse_salary(value) is None
+
+    @pytest.mark.parametrize("value", ["90k", "USD 90k", "1.5e5", "1e999999"])
+    def test_a_letter_glued_to_the_number_is_unusable(self, value):
+        # Stripping the letter changes the magnitude: "90k" is not 90/hour.
+        assert parse_salary(value) is None
+
+    @pytest.mark.parametrize("value", ["120.000,50", "1,00", "12.5.3"])
+    def test_ambiguous_separators_are_unusable(self, value):
+        # Which separator is the decimal point is a guess, and a wrong salary on
+        # the board is worse than no salary.
+        assert parse_salary(value) is None
+
+    def test_grouped_thousands_still_parse(self):
+        assert parse_salary("$120,000.50").min_annual == Decimal("120000.50")
+
     def test_range_is_not_supported_yet(self):
         # Documented in assumptions.md: a range parses to nothing rather than
         # silently picking one end of it.

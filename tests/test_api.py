@@ -9,8 +9,10 @@ from backend.api import app
 
 
 @pytest.fixture
-def client():
-    # The `with` block runs lifespan, which is what ingests the feed.
+def client(feed_dir):
+    # The `with` block runs lifespan, which is what ingests the feed. feed_dir
+    # redirects that at tests/fixtures, so the counts below are not hostage to
+    # whatever sample data happens to be sitting in backend/data/mock.
     with TestClient(app) as client:
         yield client
 

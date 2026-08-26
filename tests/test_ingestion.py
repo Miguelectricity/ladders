@@ -12,6 +12,7 @@ from backend.ingestion.ingestion import (
     process_raw,
 )
 from backend.models import CompanyType, CountryCode, EmploymentType, Language
+from tests.conftest import FIXTURE_FEED
 
 STRUCTURED = {
     "title": "Backend Engineer",
@@ -41,7 +42,7 @@ FLAT = {
 
 
 class TestLoadRaw:
-    def test_reads_the_bundled_feed(self):
+    def test_reads_the_default_feed(self, feed_dir):
         assert len(load_raw()) == 20
 
     def test_missing_file(self, tmp_path):
@@ -51,6 +52,14 @@ class TestLoadRaw:
     def test_invalid_json(self, tmp_path):
         path = tmp_path / "feed.json"
         path.write_text("{not json")
+        with pytest.raises(FeedError):
+            load_raw(path)
+
+    def test_feed_that_is_not_utf8(self, tmp_path):
+        # A scraped feed with latin-1 accents raises UnicodeDecodeError, which is
+        # neither OSError nor JSONDecodeError.
+        path = tmp_path / "feed.json"
+        path.write_bytes(b'[{"title": "Ing\xe9nieur"}]')
         with pytest.raises(FeedError):
             load_raw(path)
 
@@ -88,6 +97,12 @@ class TestLoadFeeds:
 
         assert len(load_feeds(tmp_path)) == 1
 
+    def test_a_mis_encoded_feed_does_not_stop_the_others(self, tmp_path):
+        (tmp_path / "good.json").write_text(json.dumps([STRUCTURED]))
+        (tmp_path / "latin1.json").write_bytes(b'[{"title": "Ing\xe9nieur"}]')
+
+        assert len(load_feeds(tmp_path)) == 1
+
     def test_nothing_usable_is_an_error(self, tmp_path):
         # An empty board is worse than a boot that says why.
         (tmp_path / "broken.json").write_text("{not json")
@@ -108,8 +123,8 @@ class TestLoadFeeds:
         assert failures == []
         assert len(jobs) == 2
 
-    def test_the_bundled_directory_is_the_default(self):
-        assert load_feeds() == load_raw(DEFAULT_FEED)
+    def test_the_configured_directory_is_the_default(self, feed_dir):
+        assert load_feeds() == load_raw(FIXTURE_FEED)
 
 
 class TestProcessRaw:
@@ -176,6 +191,14 @@ class TestProcessRaw:
         assert job.posting_date is None
         assert job.is_remote is None
 
+    def test_non_finite_salary_costs_the_salary_not_the_record(self):
+        # json.load() accepts bare Infinity and NaN. Infinity used to survive
+        # every check and only fail at serialization, 500ing the whole listing.
+        jobs, failures = process_raw(json.loads('[{"title": "T", "salary": Infinity}]'))
+        (job,) = jobs
+        assert failures == []
+        assert job.salary is None
+
     def test_empty_feed(self):
         assert process_raw([]) == ([], [])
 
@@ -186,7 +209,7 @@ class TestDeduplication:
         assert len(jobs) == 1
 
     def test_the_whole_feed_is_idempotent(self):
-        raw = load_raw()
+        raw = load_raw(FIXTURE_FEED)
         once, _ = process_raw(raw)
         twice, _ = process_raw(raw + raw)
         assert len(twice) == len(once)
@@ -208,8 +231,19 @@ class TestDeduplication:
         assert len(jobs) == 2
 
 
-def test_the_bundled_feed_parses_cleanly():
-    jobs, failures = process_raw(load_raw())
+def test_the_fixture_feed_parses_cleanly():
+    jobs, failures = process_raw(load_raw(FIXTURE_FEED))
     assert failures == []
     assert len(jobs) == 20
-    assert DEFAULT_FEED.exists()
+
+
+def test_the_shipped_feeds_are_loadable():
+    """A canary on backend/data/mock, asserting nothing about what is in it.
+
+    That data is sample data and changes, so this checks only what would break
+    the app at startup: the directory still yields records. Counts and contents
+    are the fixture feed's job.
+    """
+    if not any(DEFAULT_FEED.parent.glob("*.json")):
+        pytest.skip("no feeds shipped")
+    process_raw(load_feeds())

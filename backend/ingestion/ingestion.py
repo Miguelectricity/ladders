@@ -29,11 +29,18 @@ FEED_GLOB = "*.json"
 class FeedError(ValueError):
     """The whole feed is unusable - unreadable, not JSON, or not a list."""
 
-def load_raw(path: Path = DEFAULT_FEED) -> list[Any]:
+def load_raw(path: Path | None = None) -> list[Any]:
+    # Resolved here rather than bound as a default, so the feed location is one
+    # module attribute that tests (and anything else) can point elsewhere.
+    path = DEFAULT_FEED if path is None else path
+
     try:
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             raw = json.load(f)
-    except (OSError, json.JSONDecodeError) as e:
+    # UnicodeDecodeError is neither of the other two, and a scraped feed with
+    # latin-1 accents in it is exactly the file that raises it. Uncaught, it
+    # escapes load_feeds()'s skip and takes every other feed down with it.
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as e:
         raise FeedError(f"Could not read feed {path}: {e}") from e
 
     if not isinstance(raw, list):
@@ -41,7 +48,7 @@ def load_raw(path: Path = DEFAULT_FEED) -> list[Any]:
 
     return raw
 
-def load_feeds(directory: Path = FEED_DIR) -> list[Any]:
+def load_feeds(directory: Path | None = None) -> list[Any]:
     """Every feed in a directory, concatenated into one batch of raw records.
 
     Drop another .json in and it gets picked up on the next startup. One
@@ -49,6 +56,8 @@ def load_feeds(directory: Path = FEED_DIR) -> list[Any]:
     makes for one bad record - but a directory that yields nothing at all is
     an error, since serving an empty board silently is worse than not starting.
     """
+    directory = FEED_DIR if directory is None else directory
+
     records = []
     for path in sorted(directory.glob(FEED_GLOB)):
         try:
