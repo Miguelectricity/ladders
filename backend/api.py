@@ -1,12 +1,17 @@
+from contextlib import asynccontextmanager
+from dataclasses import asdict
+import logging
+from typing import Any
+
 from backend.approval.approval import approve_jobs
-from backend.ingestion.ingestion import load_raw, process_raw
+from backend.ingestion.ingestion import FeedError, load_raw, process_raw
+from backend.logging_config import configure_logging
 from backend.models.Job import CountryCode
 from backend.storage.storage import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, SortField, store
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["GET"])
+logger = logging.getLogger(__name__)
 
 COUNTRY_LABELS = {
     CountryCode.US: "United States",
@@ -14,7 +19,36 @@ COUNTRY_LABELS = {
     CountryCode.OTHER: "Other",
 }
 
-store.approved, store.rejected = approve_jobs(process_raw(load_raw()))
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ingest on startup rather than at import.
+
+    Importing this module has no side effects, so tests can import the app and
+    load their own fixtures, and a bad feed fails the boot with a clear error
+    instead of an unimportable module.
+    """
+    configure_logging()
+    try:
+        ingested_jobs, _ = process_raw(load_raw())
+    except FeedError:
+        logger.exception("Could not ingest the feed")
+        raise
+    store.approved, store.rejected = approve_jobs(ingested_jobs)
+    logger.info(f"Serving {len(store.approved)} approved jobs")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["GET"])
+
+
+def to_public(value: Any) -> dict:
+    """Serialize a dataclass, dropping the `raw` scrape we keep for debugging.
+
+    Location.raw and Salary.raw are provenance, not API surface.
+    """
+    return asdict(value, dict_factory=lambda fields: {k: v for k, v in fields if k != "raw"})
 
 
 @app.get("/api/jobs")
@@ -26,7 +60,7 @@ def list_jobs(
     page: int = Query(0, ge=0),
     page_size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
 ):
-    return store.search(query, country, sort_by, descending, page, page_size)
+    return to_public(store.search(query, country, sort_by, descending, page, page_size))
 
 
 @app.get("/api/jobs/{job_id}")
@@ -34,7 +68,7 @@ def get_job(job_id: str):
     job = store.get(job_id)
     if job is None:
         raise HTTPException(404, "Job not found")
-    return job
+    return to_public(job)
 
 
 @app.get("/api/countries")

@@ -1,6 +1,8 @@
 // Hand-mirrored from backend/models/Job.py and backend/storage/storage.py.
-// The API returns its dataclasses directly, with no response schema in between,
-// so these types track the domain models field for field -- nullability included.
+// The API serializes those dataclasses directly, with no response schema in
+// between, so these types track the domain models field for field -- nullability
+// included. The one difference is the internal `raw` scrape on Location and
+// Salary, which backend/api.py strips before responding.
 // If the API grows, generate this file from /openapi.json instead.
 
 /** backend.models.Job.CountryCode */
@@ -28,15 +30,12 @@ export type Language = 'english' | 'french' | 'unknown'
 export type SortField = 'posting_date' | 'salary_annual' | 'salary_hourly' | 'title'
 
 export interface Location {
-  /** The scraped original. The API leaks it today; never render it. */
-  raw: unknown
   city: string | null
   region: string | null
   country_code: CountryCode | null
 }
 
 export interface Salary {
-  raw: unknown
   /**
    * At most one of these is set. The feed states either an annual figure or an
    * hourly rate and the parser never derives one from the other, so any display

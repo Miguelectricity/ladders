@@ -27,7 +27,6 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Job search</h1>
-        <p>Approved postings from the ingestion pipeline.</p>
       </header>
 
       <FilterBar filters={filters} countries={countries} onChange={change} />

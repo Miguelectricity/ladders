@@ -11,3 +11,5 @@ to-do:
 - id hash
 - long lists (pagination, virtualization)
 - imports and package resolve
+- add unit tests maybe
+- delete all plan .mds
