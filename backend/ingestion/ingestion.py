@@ -12,6 +12,7 @@ from backend.ingestion.parsers import (
     parse_language,
     parse_location,
     parse_salary,
+    parse_posting_date,
 )
 from backend.ingestion.parsers.helpers import to_clean_string
 from backend.models import Job
@@ -30,7 +31,7 @@ def process_raw(jobs: list[dict]) -> list[Job]:
         title = to_clean_string(raw_job.get("title"))
         company = to_clean_string(raw_job.get("company"))
         location = parse_location(raw_job.get("location"))
-        posting_date = raw_job.get("posting_date")
+        posting_date = parse_posting_date(raw_job.get("posting_date"))
         
         new_job = Job(
             id=make_job_id(
@@ -39,13 +40,13 @@ def process_raw(jobs: list[dict]) -> list[Job]:
                 location=location,
                 posting_date=posting_date,
             ),
-            title=raw_job.get("title"),
+            title=title,
             description=raw_job.get("description"),
-            company=raw_job.get("company"),
-            location=parse_location(raw_job.get("location")),
+            company=company,
+            location=location,
             salary=parse_salary(raw_job.get("salary")),
             employment_type=parse_employment_type(raw_job.get("employment_type")),
-            posting_date=raw_job.get("posting_date"),
+            posting_date=posting_date,
             company_type=parse_company_type(raw_job.get("company_type")),
             language=parse_language(raw_job.get("language")),
             is_remote=raw_job.get("remote")
@@ -53,12 +54,4 @@ def process_raw(jobs: list[dict]) -> list[Job]:
         
         new_jobs.append(new_job)
         
-    return new_jobs
-        
-            
-def main():
-    jobs = load_raw()
-    process_raw(jobs)
-    
-if __name__ == "__main__":
-    main()        
+    return new_jobs  

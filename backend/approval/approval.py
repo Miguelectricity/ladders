@@ -73,5 +73,5 @@ def approve_jobs(jobs: list[Job]):
     for job, reason in rejected_with_reasons:
         logger.info(f"Rejected {job.id} '{job.title}' at {job.company}: {reason}")
     
-    return approved # log rejected later
+    return (approved, rejected_with_reasons)
 

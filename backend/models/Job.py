@@ -56,7 +56,7 @@ class Job:
     location: Location | None
     salary: Salary | None
     employment_type: EmploymentType | None
-    posting_date: date | str | None # parse this later
+    posting_date: date | None
     company_type: CompanyType | None
     language: Language | None
     is_remote: bool | None
