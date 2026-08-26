@@ -14,7 +14,7 @@ from backend.ingestion.parsers import (
     parse_salary,
 )
 from backend.ingestion.parsers.helpers import to_clean_string
-from backend.models.Job import Job
+from backend.models import Job
 
 # temporary
 HERE  = Path(__file__).resolve().parent

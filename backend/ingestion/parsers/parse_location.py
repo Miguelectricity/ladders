@@ -1,7 +1,7 @@
 from typing import Any
 
-from ladders.backend.ingestion.parsers.helpers import collapse, to_clean_string
-from ladders.backend.models import Location
+from backend.ingestion.parsers.helpers import collapse, to_clean_string
+from backend.models import Location
 
 COUNTRIES = {
     "usa": "US", "us": "US", "unitedstates": "US", "unitedstatesofamerica": "US", "america": "US",

@@ -1,7 +1,7 @@
 from typing import Any
 
-from ladders.backend.ingestion.parsers.helpers import collapse, to_clean_string
-from ladders.backend.models import CompanyType
+from backend.ingestion.parsers.helpers import collapse, to_clean_string
+from backend.models import CompanyType
 
 COMPANY_TYPES = {
     "directemployer": CompanyType.DIRECT_EMPLOYER,

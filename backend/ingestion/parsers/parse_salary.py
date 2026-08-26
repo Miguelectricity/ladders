@@ -1,8 +1,8 @@
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from ladders.backend.ingestion.parsers.helpers import to_clean_string
-from ladders.backend.models import Salary
+from backend.ingestion.parsers.helpers import to_clean_string
+from backend.models import Salary
 
 HOURLY_THRESHOLD = Decimal(1000)
 DEFAULT_CURRENCY = "USD"

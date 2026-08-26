@@ -1,7 +1,7 @@
 from typing import Any
 
-from ladders.backend.ingestion.parsers.helpers import collapse, to_clean_string
-from ladders.backend.models import EmploymentType
+from backend.ingestion.parsers.helpers import collapse, to_clean_string
+from backend.models import EmploymentType
 
 EMPLOYMENT_TYPES = {
     "fulltime": EmploymentType.FULL_TIME,

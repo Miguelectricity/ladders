@@ -1,6 +1,12 @@
 import logging
-from backend.models.Market import MARKETS, Market
-from backend.models.Job import Job, EmploymentType, Currency, CompanyType
+from backend.models import (
+    MARKETS,
+    CompanyType,
+    Currency,
+    EmploymentType,
+    Job,
+    Market,
+)
 
 logger = logging.getLogger(__name__)
 
