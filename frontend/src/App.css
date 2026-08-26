@@ -1,3 +1,76 @@
+/* --- Top nav --------------------------------------------------------------- */
+
+.top-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+/* The bar spans the window; its contents line up with the page below it. */
+.top-nav-inner {
+  width: 100%;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 14px 20px 18px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+}
+
+.brand {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+  color: var(--text-h);
+}
+
+.nav-pages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.nav-link {
+  padding: 7px 10px;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  color: var(--text-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--text-h);
+  background: var(--bg);
+}
+
+/* Tinted rather than filled, for the same reason as .apply: --accent inverts
+   between themes, so a solid fill would need a foreground colour per theme.
+   margin-left rather than margin-right:auto on .nav-pages, so the button stays
+   right-aligned even when the bar wraps onto a second line. */
+.nav-auth {
+  margin-left: auto;
+  padding: 7px 15px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-auth:hover {
+  border-color: var(--accent);
+}
+
+/* --- Page ------------------------------------------------------------------ */
+
 .app {
   width: 100%;
   max-width: 940px;

@@ -5,6 +5,7 @@ import { DEFAULT_FILTERS, applyFilterPatch } from './api/types'
 import { FilterBar } from './components/FilterBar'
 import { JobList } from './components/JobList'
 import { Pagination } from './components/Pagination'
+import { TopNav } from './components/TopNav'
 import { useCountries } from './hooks/useCountries'
 import { useJobs } from './hooks/useJobs'
 import './App.css'
@@ -24,35 +25,39 @@ function App() {
   const empty = page !== null && page.items.length === 0 && !loading
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Job search</h1>
-      </header>
+    <>
+      <TopNav />
 
-      <FilterBar filters={filters} countries={countries} onChange={change} />
+      <div className="app">
+        <header className="app-header">
+          <h1>Job search</h1>
+        </header>
 
-      {/* aria-busy plus the dimming in App.css: results stay readable while the
-          next page loads instead of flashing a spinner on every keystroke. */}
-      <main className="results" aria-busy={loading}>
-        {error !== null && (
-          <p className="notice notice-error" role="alert">
-            Couldn’t load jobs: {error}
-          </p>
-        )}
+        <FilterBar filters={filters} countries={countries} onChange={change} />
 
-        {page === null && loading && <p className="notice">Loading jobs…</p>}
+        {/* aria-busy plus the dimming in App.css: results stay readable while the
+            next page loads instead of flashing a spinner on every keystroke. */}
+        <main className="results" aria-busy={loading}>
+          {error !== null && (
+            <p className="notice notice-error" role="alert">
+              Couldn’t load jobs: {error}
+            </p>
+          )}
 
-        {empty && (
-          <p className="notice">No jobs match these filters. Try widening your search.</p>
-        )}
+          {page === null && loading && <p className="notice">Loading jobs…</p>}
 
-        {page !== null && page.items.length > 0 && <JobList jobs={page.items} />}
+          {empty && (
+            <p className="notice">No jobs match these filters. Try widening your search.</p>
+          )}
 
-        {page !== null && (
-          <Pagination page={page} onPageChange={(next) => change({ page: next })} />
-        )}
-      </main>
-    </div>
+          {page !== null && page.items.length > 0 && <JobList jobs={page.items} />}
+
+          {page !== null && (
+            <Pagination page={page} onPageChange={(next) => change({ page: next })} />
+          )}
+        </main>
+      </div>
+    </>
   )
 }
 
