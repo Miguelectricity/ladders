@@ -7,11 +7,20 @@ export function JobCard({ job }: { job: Job }) {
   return (
     <article className="job-card">
       <header className="job-head">
-        {/* Approval guarantees a title, but the type doesn't -- and every
-            fallback here is a row from the feed the user would otherwise see
-            as blank space. */}
-        <h3 className="job-title">{job.title ?? 'Untitled role'}</h3>
-        <p className="job-company">{job.company ?? 'Company not stated'}</p>
+        <div>
+          {/* Approval guarantees a title, but the type doesn't -- and every
+              fallback here is a row from the feed the user would otherwise see
+              as blank space. */}
+          <h3 className="job-title">{job.title ?? 'Untitled role'}</h3>
+          <p className="job-company">{job.company ?? 'Company not stated'}</p>
+        </div>
+
+        {/* Placeholder: there is no application flow behind this yet, so the
+            button deliberately has no handler. The label names the role, since
+            a list of identical "Apply" buttons tells a screen reader nothing. */}
+        <button type="button" className="apply" aria-label={`Apply to ${job.title ?? 'this role'}`}>
+          Apply
+        </button>
       </header>
 
       <dl className="job-facts">

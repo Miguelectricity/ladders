@@ -112,6 +112,13 @@
   box-shadow: var(--shadow);
 }
 
+.job-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .job-title {
   font-size: 18px;
 }
@@ -120,6 +127,24 @@
   color: var(--text-soft);
   font-size: 14px;
   margin-top: 2px;
+}
+
+.apply {
+  /* Tinted rather than filled: --accent inverts for dark mode, so a solid
+     accent background would need its own foreground colour per theme. */
+  flex-shrink: 0;
+  padding: 8px 18px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.apply:hover {
+  border-color: var(--accent);
 }
 
 .job-facts {
