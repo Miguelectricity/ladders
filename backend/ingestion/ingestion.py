@@ -18,10 +18,10 @@ from backend.ingestion.parsers.helpers import to_clean_string
 from backend.models import Job
 
 # temporary
-HERE  = Path(__file__).resolve().parent
-FEED = HERE / "mock" / "jobs.json"
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_FEED = BACKEND_ROOT / "data" / "mock" / "jobs.json"
 
-def load_raw(path: Path = FEED) -> list[dict]:
+def load_raw(path: Path = DEFAULT_FEED) -> list[dict]:
     with path.open() as f:
         return json.load(f)
     
