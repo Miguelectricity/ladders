@@ -70,6 +70,33 @@
   color: var(--text-soft);
 }
 
+/* Holds the country select and the remote toggle in one grid cell, so the
+   toggle sits under the dropdown instead of claiming a column of its own. */
+.field-location {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-soft);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* --- Results --------------------------------------------------------------- */
 
 .results {

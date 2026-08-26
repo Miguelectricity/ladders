@@ -81,13 +81,19 @@ controls.
 
 | Endpoint | Notes |
 | --- | --- |
-| `GET /api/jobs` | `query`, `country`, `sort_by`, `descending`, `page`, `page_size` |
+| `GET /api/jobs` | `query`, `country`, `remote`, `sort_by`, `descending`, `page`, `page_size` |
 | `GET /api/jobs/{id}` | 404 when unknown |
 | `GET /api/countries` | Filter options, limited to countries that have jobs |
 
 `sort_by` is one of `posting_date`, `salary_annual`, `salary_hourly`, `title`.
-Jobs missing the sorted field sort last in both directions. Interactive docs at
-<http://localhost:8000/docs>.
+Jobs missing the sorted field sort last in both directions.
+
+`country` and `remote` are independent, and narrow together: a remote job in
+Toronto matches `country=CA`, `remote=true`, and both at once. Omitting `remote`
+means any arrangement; `remote=false` is on-site only, which the API supports
+even though the UI's toggle only ever asks for remote.
+
+Interactive docs at <http://localhost:8000/docs>.
 
 ## Notes
 

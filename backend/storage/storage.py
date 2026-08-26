@@ -21,8 +21,8 @@ MAX_PAGE_SIZE = 100
 # Bounded so that distinct `?query=` strings can't grow the cache without limit.
 CACHE_MAX_ENTRIES = 32
 
-# (normalized query, normalized country, sort field, descending)
-type _CacheKey = tuple[str | None, str | None, "SortField", bool]
+# (normalized query, normalized country, remote, sort field, descending)
+type _CacheKey = tuple[str | None, str | None, bool | None, "SortField", bool]
 
 
 @dataclass(frozen=True)
@@ -83,7 +83,7 @@ class JobStore:
             self._ordered_cache.move_to_end(key)
             return cached
 
-        normalized_query, normalized_country, sort_by, descending = key
+        normalized_query, normalized_country, remote, sort_by, descending = key
         results = self._approved
 
         if normalized_query:
@@ -94,6 +94,11 @@ class JobStore:
                 j for j in results
                 if j.location and (j.location.country_code or "").lower() == normalized_country
             ]
+
+        # Independent of country: a remote job in Toronto answers to both. An
+        # unknown arrangement counts as not remote, as it does in approval.
+        if remote is not None:
+            results = [j for j in results if bool(j.is_remote) is remote]
 
         # Jobs with no value for the sort field go last, either direction.
         keyed = [(_sort_key(j, sort_by), j) for j in results]
@@ -111,6 +116,7 @@ class JobStore:
         self,
         query: str | None = None,
         country: CountryCode | None = None,
+        remote: bool | None = None,
         sort_by: SortField = SortField.POSTING_DATE,
         descending: bool = True,
         page: int = 0,
@@ -120,6 +126,7 @@ class JobStore:
         ordered = self._ordered((
             query.strip().lower() or None if query else None,
             country.lower() if country else None,
+            remote,
             sort_by,
             descending,
         ))

@@ -97,6 +97,12 @@ export interface JobFilters {
   query: string
   /** '' means "all countries" -- see the note in fetchJobs about why. */
   country: CountryCode | ''
+  /**
+   * Independent of `country`, not an alternative to it: a remote job in Toronto
+   * matches both, so the two narrow together. Off means "any arrangement"
+   * rather than "on-site only" -- there is no third state in the UI.
+   */
+  remote: boolean
   sortBy: SortField
   descending: boolean
   /** Zero-indexed, as the backend expects. */
@@ -106,6 +112,7 @@ export interface JobFilters {
 export const DEFAULT_FILTERS: JobFilters = {
   query: '',
   country: '',
+  remote: false,
   sortBy: 'posting_date',
   descending: true,
   page: 0,

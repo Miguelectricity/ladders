@@ -33,13 +33,13 @@ export function useJobs(filters: JobFilters): JobsState {
   // Destructured because the effect depends on these values, not on the
   // `filters` object -- which is a fresh reference every render and would
   // re-fire the effect forever.
-  const { country, sortBy, descending, page } = filters
-  const requestKey = JSON.stringify([query, country, sortBy, descending, page])
+  const { country, remote, sortBy, descending, page } = filters
+  const requestKey = JSON.stringify([query, country, remote, sortBy, descending, page])
 
   useEffect(() => {
     const controller = new AbortController()
 
-    fetchJobs({ query, country, sortBy, descending, page }, controller.signal)
+    fetchJobs({ query, country, remote, sortBy, descending, page }, controller.signal)
       .then((result) => setSettled({ page: result, error: null, key: requestKey }))
       .catch((error: unknown) => {
         // An aborted request isn't a failure -- a newer one superseded it, and
@@ -53,7 +53,7 @@ export function useJobs(filters: JobFilters): JobsState {
     // after a fast one for "engineer" and overwriting fresher results.
     // Debouncing makes that rare; only cancellation makes it impossible.
     return () => controller.abort()
-  }, [requestKey, query, country, sortBy, descending, page])
+  }, [requestKey, query, country, remote, sortBy, descending, page])
 
   // Derived, not stored: we are loading exactly when the settled state belongs
   // to some earlier request. Setting a flag in the effect instead would cost a

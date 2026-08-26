@@ -58,12 +58,25 @@ def to_public(value: Any) -> dict:
 def list_jobs(
     query: str | None = None,
     country: CountryCode | None = None,
+    # Tri-state: omitted is "any arrangement", not "on-site". The UI toggle only
+    # ever sends true, but false is a coherent filter so it stays supported.
+    remote: bool | None = None,
     sort_by: SortField = SortField.POSTING_DATE,
     descending: bool = True,
     page: int = Query(0, ge=0),
     page_size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
 ):
-    return to_public(store.search(query, country, sort_by, descending, page, page_size))
+    # Keywords: the positional list got long enough that an argument sliding one
+    # place would still be a valid call.
+    return to_public(store.search(
+        query=query,
+        country=country,
+        remote=remote,
+        sort_by=sort_by,
+        descending=descending,
+        page=page,
+        page_size=page_size,
+    ))
 
 
 @app.get("/api/jobs/{job_id}")

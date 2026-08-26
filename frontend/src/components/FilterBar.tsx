@@ -25,20 +25,34 @@ export function FilterBar({ filters, countries, onChange }: Props) {
         />
       </label>
 
-      <label className="field">
-        <span>Country</span>
-        <select
-          value={filters.country}
-          onChange={(event) => onChange({ country: event.target.value as CountryCode | '' })}
-        >
-          <option value="">All countries</option>
-          {countries.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      {/* Country and remote are separate questions -- where the job is, and how
+          it is worked -- so they are separate controls that narrow together
+          rather than one dropdown that mixes the two. */}
+      <div className="field-location">
+        <label className="field">
+          <span>Location</span>
+          <select
+            value={filters.country}
+            onChange={(event) => onChange({ country: event.target.value as CountryCode | '' })}
+          >
+            <option value="">All countries</option>
+            {countries.map((country) => (
+              <option key={country.code} value={country.code}>
+                {country.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={filters.remote}
+            onChange={(event) => onChange({ remote: event.target.checked })}
+          />
+          <span>Remote only</span>
+        </label>
+      </div>
 
       <label className="field">
         <span>Sort by</span>

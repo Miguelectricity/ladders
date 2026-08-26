@@ -41,6 +41,9 @@ export function fetchJobs(filters: JobFilters, signal: AbortSignal): Promise<Job
   const query = filters.query.trim()
   if (query) params.set('query', query)
   if (filters.country) params.set('country', filters.country)
+  // Only sent when on. `remote=false` is a valid filter meaning "on-site only",
+  // which is not what an unchecked box is asking for.
+  if (filters.remote) params.set('remote', 'true')
 
   return getJson<JobPage>(`/api/jobs?${params}`, signal)
 }

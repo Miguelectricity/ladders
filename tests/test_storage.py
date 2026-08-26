@@ -74,6 +74,53 @@ class TestFilter:
         assert "6" not in ids(store.search(country=CountryCode.US, page_size=100))
 
 
+class TestRemoteFilter:
+    @pytest.fixture
+    def store(self, make_job):
+        store = JobStore()
+        store.approved = [
+            make_job(id="remote-us", location=at(CountryCode.US), is_remote=True),
+            make_job(id="office-us", location=at(CountryCode.US), is_remote=False),
+            make_job(id="remote-ca", location=at(CountryCode.CA), is_remote=True),
+            make_job(id="unknown-us", location=at(CountryCode.US), is_remote=None),
+        ]
+        return store
+
+    def test_off_by_default(self, store):
+        # Not passing the filter is "any arrangement", not "on-site".
+        assert store.search().total == 4
+
+    def test_remote_only(self, store):
+        assert sorted(ids(store.search(remote=True))) == ["remote-ca", "remote-us"]
+
+    def test_on_site_only(self, store):
+        # The API supports it even though the UI toggle never asks for it.
+        assert sorted(ids(store.search(remote=False))) == ["office-us", "unknown-us"]
+
+    def test_unknown_arrangement_counts_as_not_remote(self, store):
+        # Same reading approval takes, so the two never disagree about a job.
+        assert "unknown-us" not in ids(store.search(remote=True))
+
+    def test_narrows_with_country_rather_than_replacing_it(self, store):
+        # A remote job in Toronto answers to both filters; together they mean
+        # "remote, and in Canada".
+        assert ids(store.search(country=CountryCode.CA, remote=True)) == ["remote-ca"]
+        assert sorted(ids(store.search(country=CountryCode.US, remote=True))) == ["remote-us"]
+
+    def test_narrows_with_a_query(self, store, make_job):
+        store.approved = [
+            make_job(id="a", title="Remote Engineer", is_remote=True),
+            make_job(id="b", title="Remote Designer", is_remote=True),
+        ]
+        assert ids(store.search(query="Engineer", remote=True)) == ["a"]
+
+    def test_is_part_of_the_cache_key(self, store):
+        # Two searches differing only by this flag must not share an entry.
+        assert store.search(remote=True).total == 2
+        assert store.search(remote=False).total == 2
+        assert store.search().total == 4
+
+
 class TestSort:
     def test_by_salary_descending(self, store):
         page = store.search(sort_by=SortField.SALARY_ANNUAL, descending=True)

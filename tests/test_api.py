@@ -63,6 +63,28 @@ class TestListJobs:
         assert body["total"] == 7
         assert all(job["location"]["country_code"] == "US" for job in body["items"])
 
+    def test_filter_by_remote(self, client):
+        body = client.get("/api/jobs?remote=true&page_size=100").json()
+        assert body["total"] == 3
+        assert all(job["is_remote"] for job in body["items"])
+
+    def test_remote_is_not_a_country(self, client):
+        # The remote jobs sit in more than one country, which is why this is a
+        # filter of its own rather than an entry in the country dropdown.
+        items = client.get("/api/jobs?remote=true&page_size=100").json()["items"]
+        assert len({job["location"]["country_code"] for job in items if job["location"]}) > 1
+
+    def test_remote_narrows_with_country(self, client):
+        both = client.get("/api/jobs?country=US&remote=true&page_size=100").json()
+        assert both["total"] == 2
+        assert all(
+            job["is_remote"] and job["location"]["country_code"] == "US"
+            for job in both["items"]
+        )
+
+    def test_omitting_remote_means_any_arrangement(self, client):
+        assert client.get("/api/jobs").json()["total"] == 11
+
     def test_sort_by_salary(self, client):
         items = client.get(
             "/api/jobs?sort_by=salary_annual&descending=true&page_size=100"
