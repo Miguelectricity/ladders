@@ -27,14 +27,17 @@ class CountryCode(StrEnum):
     CA = "CA"
     OTHER = "other"
     
+class Currency(StrEnum):
+    USD = "USD"
+    OTHER = "OTHER"
+    
 @dataclass
 class Salary:
     raw: Any
-    annual: Decimal | None
-    hourly: Decimal | None
-    currency: str
+    min_annual: Decimal | None
+    min_hourly: Decimal | None
+    currency: Currency | None
     inferred_currency: bool = False
-    inferred_period: bool = False
 
 @dataclass
 class Location:
