@@ -38,6 +38,7 @@ class Salary:
     min_hourly: Decimal | None
     currency: Currency | None
     inferred_currency: bool = False
+    inferred_period: bool = False
 
 @dataclass
 class Location:

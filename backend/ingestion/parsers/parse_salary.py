@@ -2,7 +2,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from backend.ingestion.parsers.helpers import to_clean_string
-from backend.models import Salary
+from backend.models import Currency, Salary
 
 HOURLY_THRESHOLD = Decimal(1000)
 DEFAULT_CURRENCY = "USD"
@@ -57,11 +57,14 @@ def parse_salary(value: Any) -> Salary | None:
         
     return Salary(
         raw=value,
-        annual=None if is_hourly else amount,
-        hourly=amount if is_hourly else None,
-        currency=(currency or DEFAULT_CURRENCY).upper(),
+        min_annual=None if is_hourly else amount,
+        min_hourly=amount if is_hourly else None,
+        currency=(
+            Currency.USD
+            if (currency or DEFAULT_CURRENCY).upper() == Currency.USD
+            else Currency.OTHER
+        ),
         inferred_currency=currency is None,
-        inferred_period=inferred_period
     )
     
     
