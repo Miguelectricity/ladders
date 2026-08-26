@@ -65,6 +65,7 @@ def parse_salary(value: Any) -> Salary | None:
             else Currency.OTHER
         ),
         inferred_currency=currency is None,
+        inferred_period=inferred_period,
     )
     
     
