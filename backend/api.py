@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from backend.approval.approval import approve_jobs
-from backend.ingestion.ingestion import FeedError, load_raw, process_raw
+from backend.ingestion.ingestion import FeedError, load_feeds, process_raw
 from backend.logging_config import configure_logging
 from backend.models.Job import CountryCode
 from backend.storage.storage import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, SortField, store
@@ -27,10 +27,13 @@ async def lifespan(app: FastAPI):
     Importing this module has no side effects, so tests can import the app and
     load their own fixtures, and a bad feed fails the boot with a clear error
     instead of an unimportable module.
+
+    Every feed in the data directory is read, so adding one is a matter of
+    dropping a file in and restarting - see reingest.sh.
     """
     configure_logging()
     try:
-        ingested_jobs, _ = process_raw(load_raw())
+        ingested_jobs, _ = process_raw(load_feeds())
     except FeedError:
         logger.exception("Could not ingest the feed")
         raise

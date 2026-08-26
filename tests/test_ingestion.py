@@ -4,7 +4,13 @@ from decimal import Decimal
 
 import pytest
 
-from backend.ingestion.ingestion import DEFAULT_FEED, FeedError, load_raw, process_raw
+from backend.ingestion.ingestion import (
+    DEFAULT_FEED,
+    FeedError,
+    load_feeds,
+    load_raw,
+    process_raw,
+)
 from backend.models import CompanyType, CountryCode, EmploymentType, Language
 
 STRUCTURED = {
@@ -53,6 +59,57 @@ class TestLoadRaw:
         path.write_text(json.dumps({"jobs": []}))
         with pytest.raises(FeedError):
             load_raw(path)
+
+
+class TestLoadFeeds:
+    def test_reads_every_feed_in_the_directory(self, tmp_path):
+        (tmp_path / "a.json").write_text(json.dumps([STRUCTURED]))
+        (tmp_path / "b.json").write_text(json.dumps([FLAT, FLAT]))
+
+        assert len(load_feeds(tmp_path)) == 3
+
+    def test_reads_them_in_a_stable_order(self, tmp_path):
+        (tmp_path / "b.json").write_text(json.dumps([FLAT]))
+        (tmp_path / "a.json").write_text(json.dumps([STRUCTURED]))
+
+        titles = [record["title"] for record in load_feeds(tmp_path)]
+        assert titles == ["Backend Engineer", "Senior Software Engineer"]
+
+    def test_ignores_files_that_are_not_json(self, tmp_path):
+        (tmp_path / "feed.json").write_text(json.dumps([STRUCTURED]))
+        (tmp_path / "notes.txt").write_text("not a feed")
+        (tmp_path / "feed.json.bak").write_text("{broken")
+
+        assert len(load_feeds(tmp_path)) == 1
+
+    def test_one_broken_feed_does_not_stop_the_others(self, tmp_path):
+        (tmp_path / "good.json").write_text(json.dumps([STRUCTURED]))
+        (tmp_path / "broken.json").write_text("{not json")
+
+        assert len(load_feeds(tmp_path)) == 1
+
+    def test_nothing_usable_is_an_error(self, tmp_path):
+        # An empty board is worse than a boot that says why.
+        (tmp_path / "broken.json").write_text("{not json")
+        with pytest.raises(FeedError):
+            load_feeds(tmp_path)
+
+    def test_empty_directory_is_an_error(self, tmp_path):
+        with pytest.raises(FeedError):
+            load_feeds(tmp_path)
+
+    def test_duplicates_across_feeds_collapse(self, tmp_path):
+        # The same posting listed by two sources is still one job.
+        (tmp_path / "source_a.json").write_text(json.dumps([STRUCTURED, FLAT]))
+        (tmp_path / "source_b.json").write_text(json.dumps([STRUCTURED]))
+
+        jobs, failures = process_raw(load_feeds(tmp_path))
+
+        assert failures == []
+        assert len(jobs) == 2
+
+    def test_the_bundled_directory_is_the_default(self):
+        assert load_feeds() == load_raw(DEFAULT_FEED)
 
 
 class TestProcessRaw:

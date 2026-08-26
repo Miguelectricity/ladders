@@ -21,9 +21,10 @@ from backend.models import Job
 
 logger = logging.getLogger(__name__)
 
-# temporary
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_FEED = BACKEND_ROOT / "data" / "mock" / "jobs.json"
+FEED_DIR = BACKEND_ROOT / "data" / "mock"
+DEFAULT_FEED = FEED_DIR / "jobs.json"
+FEED_GLOB = "*.json"
 
 class FeedError(ValueError):
     """The whole feed is unusable - unreadable, not JSON, or not a list."""
@@ -39,6 +40,29 @@ def load_raw(path: Path = DEFAULT_FEED) -> list[Any]:
         raise FeedError(f"Feed {path} must be a list of postings, got {type(raw).__name__}")
 
     return raw
+
+def load_feeds(directory: Path = FEED_DIR) -> list[Any]:
+    """Every feed in a directory, concatenated into one batch of raw records.
+
+    Drop another .json in and it gets picked up on the next startup. One
+    unreadable file is logged and skipped - the same bargain process_raw()
+    makes for one bad record - but a directory that yields nothing at all is
+    an error, since serving an empty board silently is worse than not starting.
+    """
+    records = []
+    for path in sorted(directory.glob(FEED_GLOB)):
+        try:
+            feed = load_raw(path)
+        except FeedError as e:
+            logger.error(f"Skipping feed: {e}")
+            continue
+        logger.info(f"Loaded {len(feed)} records from {path.name}")
+        records.extend(feed)
+
+    if not records:
+        raise FeedError(f"No usable feeds in {directory}")
+
+    return records
 
 def process_raw(jobs: list[Any]) -> tuple[list[Job], list[tuple[int, str]]]:
     new_jobs = []

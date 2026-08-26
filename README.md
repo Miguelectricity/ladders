@@ -20,6 +20,22 @@ uv run uvicorn backend.api:app --reload --port 8000
 cd frontend && npm run dev
 ```
 
+## Adding a feed
+
+Every `*.json` file in `backend/data/mock/` is ingested at startup, so adding a
+source means dropping a file in:
+
+```sh
+cp their_feed.json backend/data/mock/
+./reingest.sh
+```
+
+`reingest.sh` re-runs the API's startup against the running `./dev.sh` — no
+restart, no lost terminal — and prints the job count before and after. Feeds are
+read in filename order and merged into one batch, so a posting listed by two
+sources is stored once. A file that isn't readable JSON is logged and skipped;
+only a directory with nothing usable in it fails the boot.
+
 ## Tests
 
 ```sh
@@ -31,13 +47,13 @@ uv run pytest
 The pipeline is four stages, each usable on its own:
 
 ```
-feed.json -> ingestion -> approval -> storage -> API -> UI
+data/mock/*.json -> ingestion -> approval -> storage -> API -> UI
 ```
 
 | Package | Responsibility |
 | --- | --- |
 | `backend/models` | The internal representation (`Job`) and the approval policies (`Market`). |
-| `backend/ingestion` | Reads a feed and maps records onto `Job`, one parser per field. |
+| `backend/ingestion` | Reads the feed directory and maps records onto `Job`, one parser per field. |
 | `backend/approval` | Applies the criteria; returns approved jobs and rejections with reasons. |
 | `backend/storage` | Holds approved jobs; filters, sorts and pages them. |
 | `backend/api.py` | FastAPI endpoints. Ingests once at startup. |
@@ -47,8 +63,8 @@ feed.json -> ingestion -> approval -> storage -> API -> UI
 field is treated as untrusted: a value of the wrong shape becomes `None` or
 `UNKNOWN` rather than propagating, a record that cannot be parsed is collected
 as a failure instead of aborting the run, and records are keyed by a content
-hash so re-ingesting a feed is idempotent. A feed that is unreadable, not JSON,
-or not a list raises `FeedError` — there is nothing to salvage.
+hash so re-ingesting a feed is idempotent. The same bargain applies one level
+up, to whole files — see *Adding a feed*.
 
 **Approval** splits into two parts. Rules that hold everywhere (title present,
 full-time, not a staffing firm) are checked directly. Everything geographic —
